@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 #include <string>
 #include <queue>
 #include <stack>
@@ -145,12 +146,35 @@ std::string getUserInput() {
     return equation;
 }
 
+int gauss_seidel_SLE() {
+//TODO
+}
+
+
 float getStep(float x0, float xn, int n) {
     float stepSize = (xn - x0) / n;
     return stepSize;
 }
 
-int runge_kutta(std::string equation, float x0, float y0, float xn, float n) {
+int trapezoidal_integration(std::string equation, float lowerBound, float upperBound, float interval) {
+    #define f(x) equation
+    float integration = 0.0;
+    float stepSize, k;
+    int i;
+
+    stepSize = (upperBound - lowerBound) / interval;
+    integration = f(lowerBound) + f(upperBound);
+
+    for (i = 0; i <= interval - 1; i++) {
+        k = lowerBound + i * stepSize;
+        integration = integration + 2 * (f(k));
+    }
+    integration = integration * (stepSize / 2);
+
+    return integration;
+}
+
+int runge_kutta(std::string equation, float x0, float y0, float xn*, float n*) {
     #define f(x,y) equation;
     float yn, k1, k2, k3, k4, k;
     int i;
