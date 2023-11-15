@@ -250,8 +250,37 @@ int main() {
         }
         break;
         case 3:
+            float x0, y0, xn, n;
+            std::string equation;
+            std::cout << "Enter Equation \n";
+            std::getline(std::cin, equation);
+            std::cout << "Enter Initial Conditions \n"
+                << "y0: \n";
+                << "x0: \n";
+            std::cin >> y0;
+            std::cin >> x0;
+            std::cout << "Enter Calculation Point: \n";
+                << "xn: \n";
+            std::cin >> xn;
+            std::cout << "Enter Number Of Steps: \n";
+            std::cin >> n;
+            runge_kutta(equation, x0, y0, xn, n);
+            std::cout << "f(" << x0<< ") = " << y0 "\n";
             break;
         case 4:
+            std::string equation;
+            float lowerBound, upperBound, interval;
+
+            std::cout << "What Would You Like To Integrate: \n";
+            std::getline(std::cin, equation);
+            std::cout << "Lower Integration Bound: \n";
+            std::cin >> lowerBound;
+            std::cout << "Upper Integration Bound: \n";
+            std::cin >> upperBound;
+            std::cout << "Enter Number Of Sub Intervals: \n";
+            std::cin >> interval;
+            trapezoidal_integration(equation, lowerBound, upperBound, interval);
+            std::cout << "Integral Of " << equation << "From " << lowerBound << "To " << upperBound << "Is: \n";
             break;
         case 5:
             break;
