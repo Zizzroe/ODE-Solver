@@ -222,6 +222,9 @@ int main() {
     std::cout << "\n**********ODE SOLVER********** \n"
         << "1. Evaluate ODE At A Static Time \n"
         << "2. Evaluate ODE Over An Interval Of Time \n";
+        << "3. Evaluate Using 4th Order Runge-Kutta Method \n";
+        << "4. Evaluate Integral of A Function \n";
+        << "5. Evaluate System Of Linear Equations \n";
     std::cin >> EvalType;
 
     switch (EvalType) {
@@ -246,7 +249,12 @@ int main() {
             std::cout << "y(" << i << "): " << result << std::endl;
         }
         break;
-
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
     default:
         std::cerr << "Invalid option\n";
         break;
