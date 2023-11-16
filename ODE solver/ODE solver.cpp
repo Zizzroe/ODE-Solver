@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <iostream>
 #include <math.h>
 #include <string>
@@ -7,148 +8,36 @@
 #include <map>
 #include <functional>
 #include <regex>
+#include <vector>
+#include <stdlib.h>
+#include <iomanip>
 
-int getPrecedence(char op) {
-    switch (op) {
-    case '+':
-    case '-':
-        return 1;
-    case '*':
-    case '/':
-        return 2;
-    case '^':
-        return 3;
-    default:
-        return 0;
-    }
-}
+#define SIZE 10 
 
-std::queue<std::string> shuntingYard(const std::string& infix) {
-    std::queue<std::string> outputQueue;
-    std::stack<char> operatorStack;
+void gaussJordanElimination(int n, float coefficients[SIZE][SIZE + 1], float solutions[SIZE]) {
+    float ratio;
 
-    for (char token : infix) {
-        if (std::isspace(token)) {
-            continue;
+    // Applying Gauss Jordan Elimination
+    for (int i = 1; i <= n; i++) {
+        if (coefficients[i][i] == 0.0) {
+            std::cout << "Mathematical Error!";
+            std::exit(0);
         }
-
-        if (std::isalnum(token)) {
-            outputQueue.push(std::string(1, token));
-        }
-        else if (token == '(') {
-            operatorStack.push(token);
-        }
-        else if (token == ')') {
-            while (!operatorStack.empty() && operatorStack.top() != '(') {
-                outputQueue.push(std::string(1, operatorStack.top()));
-                operatorStack.pop();
-            }
-            if (!operatorStack.empty() && operatorStack.top() == '(') {
-                operatorStack.pop();
-            }
-            else {
-                std::cerr << "Error: incorrect parenthesis \n";
-                return {};
+        for (int j = 1; j <= n; j++) {
+            if (i != j) {
+                ratio = coefficients[j][i] / coefficients[i][i];
+                for (int k = 1; k <= n + 1; k++) {
+                    coefficients[j][k] = coefficients[j][k] - ratio * coefficients[i][k];
+                }
             }
         }
-        else if (std::ispunct(token)) {
-            while (!operatorStack.empty() && getPrecedence(operatorStack.top()) >= getPrecedence(token)) {
-                outputQueue.push(std::string(1, operatorStack.top()));
-                operatorStack.pop();
-            }
-            operatorStack.push(token);
-        }
-        else {
-            std::cerr << "Error: unidentified token" << token << "\n";
-            return {};
-        }
-
-        std::cout << "Token: " << token << std::endl;
-    }
-    while (!operatorStack.empty()) {
-        if (operatorStack.top() == '(') {
-            std::cerr << "Error: mismatched parenthesis \n";
-            return {};
-        }
-        outputQueue.push(std::string(1, operatorStack.top()));
-        operatorStack.pop();
     }
 
-    return outputQueue;
-}
-
-
-std::queue<std::string> postfixEval(const std::string& infix) {
-    std::queue<std::string> postfixExpression = shuntingYard(infix);
-    return postfixExpression;
-}
-
-double evaluatePostfix(std::queue<std::string>& postfix, double t) {
-    std::stack<double> operandStack;
-
-    while (!postfix.empty()) {
-        const std::string& token = postfix.front();
-
-        if (std::isdigit(token[0]) || (token[0] == '-' && token.size() > 1 && std::isdigit(token[1]))) {
-            operandStack.push(std::stod(token));
-        }
-        else if (token == "t") {
-            operandStack.push(t);
-        }
-        else if (token == "+") {
-            double b = operandStack.top();
-            operandStack.pop();
-            double a = operandStack.top();
-            operandStack.pop();
-            operandStack.push(a + b);
-        }
-        else if (token == "-") {
-            double b = operandStack.top();
-            operandStack.pop();
-            double a = operandStack.top();
-            operandStack.pop();
-            operandStack.push(a - b);
-        }
-        else if (token == "*") {
-            double b = operandStack.top();
-            operandStack.pop();
-            double a = operandStack.top();
-            operandStack.pop();
-            operandStack.push(a * b);
-        }
-        else if (token == "/") {
-            double b = operandStack.top();
-            operandStack.pop();
-            double a = operandStack.top();
-            operandStack.pop();
-            operandStack.push(a / b);
-        }
-
-        std::cout << "Token: " << token << " Result: " << operandStack.top() << std::endl;
-
-        postfix.pop();
+    // Obtaining Solution
+    for (int i = 1; i <= n; i++) {
+        solutions[i] = coefficients[i][n + 1] / coefficients[i][i];
     }
-
-    if (!operandStack.empty()) {
-        return operandStack.top();
-    }
-
-    return 0.0;
 }
-
-
-std::string getUserInput() {
-    std::string equation;
-
-    std::cout << "**********ODE SOLVER ********** \n";
-    std::cout << "Input Your Differential Equation \n";
-    std::getline(std::cin, equation);
-    return equation;
-}
-
-//int gauss_seidel_SLE() {
-    //TODO
-//}
 
 
 using EquationFunction = std::function<double(float, float)>;
@@ -164,7 +53,7 @@ float getStep(float x0, float xn, int n) {
     return stepSize;
 }
 
-float trapezoidal_integration(float lowerBound, float upperBound, float interval) {
+float trapezoidal_integration(float lowerBound, float upperBound, float interval) { //RECOMMENDED VALUE FOR INTERVAL IS MINIMUM OF 500
 #define integrand(x) 1 / (1 + pow(x, 2)) //TYPE IN YOUR INTEGRAND HERE
     float integration = 0.0;
     float stepSize, k;
@@ -182,84 +71,57 @@ float trapezoidal_integration(float lowerBound, float upperBound, float interval
     return integration;
 }
 
-double runge_kutta(const EquationFunction& function, float x0, float y0, float xn, float n) {
-    float yn, k1, k2, k3, k4, k;
-    int i;
-
-    float h = getStep(x0, xn, n);
-
-    for (i = 0; i < n; i++) {
-        k1 = h * function(x0, y0);
-        k2 = h * function((x0 + h / 2), (y0 + k1 / 2));
-        k3 = h * function((x0 + h / 2), (y0 + k2 / 2));
-        k4 = h * function((x0 + h), (y0 + k3));
-        k = (k1 + 2 * k2 + 2 * k3 + k4) / 6;
-        yn = y0 + k;
-        x0 = x0 + h;
-        y0 = yn;
+std::vector<std::pair<double, double>> runge_kutta(const EquationFunction& function, float x0, float y0, float xn, float n) {
+    if (n <= 0) {
+        std::cerr << "Error: Number of steps should be greater than 0.\n";
+        return {};
     }
-    return yn;
+
+    double h = getStep(x0, xn, n);
+    std::vector<std::pair<double, double>> results;
+    results.reserve(n + 1); // Reserve space for efficiency
+
+    for (int step = 0; step <= n; ++step) {
+        results.emplace_back(x0, y0);
+
+        double k1 = h * function(x0, y0);
+        double k2 = h * function(x0 + h / 2, y0 + k1 / 2);
+        double k3 = h * function(x0 + h / 2, y0 + k2 / 2);
+        double k4 = h * function(x0 + h, y0 + k3);
+
+        y0 = y0 + (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        x0 = x0 + h;
+    }
+
+    return results;
 }
 
+
 int main() {
-    std::string infix = getUserInput();
-    std::queue<std::string> postfix = postfixEval(infix);
 
-    if (postfix.empty()) {
-        std::cerr << "Error: Invalid Postfix Expression \n";
-        return 1;
-    }
-
-    std::queue<std::string> copyPostfix = postfix;  // Make a copy for printing
-    std::queue<std::string> evalPostfix = postfix;  // Make another copy for evaluation
-
-    // Print the postfix expression
-    std::cout << "\nPostfix Expression: ";
-    while (!copyPostfix.empty()) {
-        std::cout << copyPostfix.front() << " ";
-        copyPostfix.pop();
-    }
-    std::cout << std::endl;
-
+    //CASE DETERMINANT
     int EvalType;
-    double result;
+    //RK4
+    EquationFunction function;
+    std::vector<std::pair<double, double>> resultRK4;
+    //TRAPEZOIDAL_INTEGRATION
+    float resultIntegral;
     double t;
     double tLower, tUpper, stepSize;
-    EquationFunction function;
-    EquationFunction integrand;
     std::string equation;
+    //SLE
+    float coefficients[SIZE][SIZE + 1], solutions[SIZE];
+    int n;
 
     std::cout << "\n**********ODE SOLVER********** \n";
-    std::cout << "1. Evaluate ODE At A Static Time \n";
-    std::cout << "2. Evaluate ODE Over An Interval Of Time \n";
-    std::cout << "3. Evaluate Using 4th Order Runge-Kutta Method \n";
-    std::cout << "4. Evaluate Integral of A Function \n";
-    std::cout << "5. Evaluate System Of Linear Equations \n";
+    std::cout << "1. Evaluate Using 4th Order Runge-Kutta Method \n";
+    std::cout << "2. Evaluate Integral of A Function \n";
+    std::cout << "3. Evaluate System Of Linear Equations \n";
     std::cin >> EvalType;
 
     switch (EvalType) {
+    
     case 1:
-        std::cout << "Evaluate At What Value Of T: \n";
-        std::cin >> t;
-        result = evaluatePostfix(evalPostfix, t);
-        std::cout << "\nResult: " << result << std::endl;
-        break;
-
-    case 2:
-        std::cout << "Evaluate Equation From T = : \n";
-        std::cin >> tLower;
-        std::cout << "Evaluate Equation To T = : \n";
-        std::cin >> tUpper;
-        std::cout << "Enter Step Size: \n";
-        std::cin >> stepSize;
-
-        t = tLower;
-        for (double i = tLower; i <= tUpper; i += stepSize) {
-            result = evaluatePostfix(evalPostfix, i);
-            std::cout << "y(" << i << "): " << result << std::endl;
-        }
-        break;
-    case 3:
         float x0, y0, xn, n;
         std::cout << "Enter Initial Conditions \n";
         std::cout << "y0: \n";
@@ -272,10 +134,13 @@ int main() {
         std::cout << "Enter Number Of Steps: \n";
         std::cin >> n;
         function = getEquation();
-        runge_kutta(function, x0, y0, xn, n);
-        std::cout << "f(" << x0 << ") = " << y0 << "\n";
+        resultRK4 = runge_kutta(function, x0, y0, xn, n);
+        std::cout << "Results for Runge-Kutta method:\n";
+        for (const auto& point : resultRK4) {
+            std::cout << "x: " << point.first << ", y: " << point.second << "\n";
+        }
         break;
-    case 4:
+    case 2:
         float lowerBound, upperBound, interval;
         std::cout << "Lower Integration Bound: \n";
         std::cin >> lowerBound;
@@ -283,10 +148,24 @@ int main() {
         std::cin >> upperBound;
         std::cout << "Enter Number Of Sub Intervals: \n";
         std::cin >> interval;
-        trapezoidal_integration(lowerBound, upperBound, interval);
-        std::cout << "Integral Of " << equation << "From " << lowerBound << "To " << upperBound << "Is: \n";
+        resultIntegral = trapezoidal_integration(lowerBound, upperBound, interval);
+        std::cout << "Integral " << equation << "From " << lowerBound << " To " << upperBound << " Is: " << resultIntegral << "\n";
         break;
-    case 5:
+    case 3:
+        std::cout << "Enter The # Of Unknown Variables In Your System Of Linear Equations: \n";
+        std::cin >> n;
+        std::cout << "Enter Coefficients of Augmented Matrix: " << std::endl;
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n + 1; j++) {
+                std::cout << "a[" << i << "]" << j << "= ";
+                std::cin >> coefficients[i][j];
+            }
+        }
+        gaussJordanElimination(n, coefficients, solutions);
+        std::cout << std::endl << "Solution: " << std::endl;
+        for (int i = 1; i <= n; i++) {
+            std::cout << "x[" << i << "] = " << solutions[i] << std::endl;
+        }
         break;
     default:
         std::cerr << "Invalid option\n";
@@ -297,7 +176,5 @@ int main() {
 };
 
 //TODO
-//FIX CALCULATIONS OVER AN INTERVAL
 //CREATE A METHOD FOR SOLVING NSV ODE's
-//IMPLEMENT EULER METHOD FOR SOLVING ODE, KEEP SHUNTING YARD ALGORITHM FOR PARSING INPUT INTO EULER METHOD
 //CREATE A SYSTEM OF LINEAR EQUATIONS HANDLER FOR NSV ODE
