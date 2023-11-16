@@ -30,7 +30,7 @@ std::vector<std::pair<double, std::vector<double>>> nsv_euler(const EquationSyst
     return results;
 }
 
-int main() {
+int results() {
     // Define your NSV ODE system
     EquationSystem nsvSystem = [](double t, const std::vector<double>& y) -> std::vector<double> {
         // Example system: dy1/dt = -y1, dy2/dt = y1 - y2
