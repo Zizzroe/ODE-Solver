@@ -30,3 +30,11 @@ std::vector<std::pair<double, std::vector<double>>> runge_kutta_system(const Equ
 
     return results;
 }
+
+EquationSystem getSystemOfEquations() {
+    return [](double x, const std::vector<double>& y) {
+        // Define your system of ODEs here
+        // Example: dy1/dx = y2, dy2/dx = -y1
+        return std::vector<double>{y[1], -y[0]};
+    };
+}
