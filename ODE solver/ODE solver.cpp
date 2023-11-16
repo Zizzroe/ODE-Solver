@@ -11,6 +11,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <iomanip>
+#include <tuple>
 
 #define SIZE 10 
 
@@ -44,7 +45,7 @@ using EquationFunction = std::function<double(float, float)>;
 
 EquationFunction getEquation() {
     return[](float x, float y) {
-        return (y * y - x * x) / (y * y + x * x); //TYPE IN YOUR EQUATION HERE
+        return (y * y - x * x ) / ( y * y + x * x ); //TYPE IN YOUR EQUATION HERE
         };
 }
 
@@ -54,7 +55,7 @@ float getStep(float x0, float xn, int n) {
 }
 
 float trapezoidal_integration(float lowerBound, float upperBound, float interval) { //RECOMMENDED VALUE FOR INTERVAL IS MINIMUM OF 500
-#define integrand(x) 1 / (1 + pow(x, 2)) //TYPE IN YOUR INTEGRAND HERE
+#define integrand(x) pow(x, x) //TYPE IN YOUR INTEGRAND HERE
     float integration = 0.0;
     float stepSize, k;
 
@@ -71,26 +72,29 @@ float trapezoidal_integration(float lowerBound, float upperBound, float interval
     return integration;
 }
 
-std::vector<std::pair<double, double>> runge_kutta(const EquationFunction& function, float x0, float y0, float xn, float n) {
+std::vector<std::tuple<double, double, double>> runge_kutta(const EquationFunction& function, float x0, float y0, float xn, float n) {
+    double yn;
     if (n <= 0) {
         std::cerr << "Error: Number of steps should be greater than 0.\n";
         return {};
     }
 
     double h = getStep(x0, xn, n);
-    std::vector<std::pair<double, double>> results;
+    std::vector<std::tuple<double, double, double>> results;
     results.reserve(n + 1); // Reserve space for efficiency
 
     for (int step = 0; step <= n; ++step) {
-        results.emplace_back(x0, y0);
 
         double k1 = h * function(x0, y0);
         double k2 = h * function(x0 + h / 2, y0 + k1 / 2);
         double k3 = h * function(x0 + h / 2, y0 + k2 / 2);
         double k4 = h * function(x0 + h, y0 + k3);
-
-        y0 = y0 + (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        double k = (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+        yn = y0 + k;
         x0 = x0 + h;
+        y0 = yn;
+        
+        results.emplace_back(x0, y0, yn);
     }
 
     return results;
@@ -103,7 +107,7 @@ int main() {
     int EvalType;
     //RK4
     EquationFunction function;
-    std::vector<std::pair<double, double>> resultRK4;
+    std::vector<std::tuple<double, double, double>> resultRK4;
     //TRAPEZOIDAL_INTEGRATION
     float resultIntegral;
     double t;
@@ -137,7 +141,7 @@ int main() {
         resultRK4 = runge_kutta(function, x0, y0, xn, n);
         std::cout << "Results for Runge-Kutta method:\n";
         for (const auto& point : resultRK4) {
-            std::cout << "x: " << point.first << ", y: " << point.second << "\n";
+            std::cout << "x: " << std::get<0>(point) << ", y: " << std::get<1>(point) << " yn: " << std::get<2>(point) <<"\n";
         }
         break;
     case 2:
@@ -149,7 +153,7 @@ int main() {
         std::cout << "Enter Number Of Sub Intervals: \n";
         std::cin >> interval;
         resultIntegral = trapezoidal_integration(lowerBound, upperBound, interval);
-        std::cout << "Integral " << equation << "From " << lowerBound << " To " << upperBound << " Is: " << resultIntegral << "\n";
+        std::cout << "Integral " << equation << "From " << lowerBound << " To " << upperBound << " Is: " << std::setprecision(15) << resultIntegral << "\n";
         break;
     case 3:
         std::cout << "Enter The # Of Unknown Variables In Your System Of Linear Equations: \n";
