@@ -146,52 +146,59 @@ std::string getUserInput() {
     return equation;
 }
 
-int gauss_seidel_SLE() {
-//TODO
-}
+//int gauss_seidel_SLE() {
+    //TODO
+//}
 
+
+using EquationFunction = std::function<double(float, float)>;
+
+EquationFunction getEquation() {
+    return[](float x, float y) {
+        return (y * y - x * x) / (y * y + x * x); //TYPE IN YOUR EQUATION HERE
+        };
+}
 
 float getStep(float x0, float xn, int n) {
     float stepSize = (xn - x0) / n;
     return stepSize;
 }
 
-int trapezoidal_integration(std::string equation, float lowerBound, float upperBound, float interval) {
-    #define f(x) equation
+float trapezoidal_integration(float lowerBound, float upperBound, float interval) {
+#define integrand(x) 1 / (1 + pow(x, 2)) //TYPE IN YOUR INTEGRAND HERE
     float integration = 0.0;
     float stepSize, k;
-    int i;
 
     stepSize = (upperBound - lowerBound) / interval;
-    integration = f(lowerBound) + f(upperBound);
+    integration = integrand(lowerBound) + integrand(upperBound);
 
-    for (i = 0; i <= interval - 1; i++) {
+    for (int i = 1; i < interval; i++) {
         k = lowerBound + i * stepSize;
-        integration = integration + 2 * (f(k));
+        integration += 2 * integrand(k);
     }
+
     integration = integration * (stepSize / 2);
 
     return integration;
 }
 
-int runge_kutta(std::string equation, float x0, float y0, float xn*, float n*) {
-    #define f(x,y) equation;
+double runge_kutta(const EquationFunction& function, float x0, float y0, float xn, float n) {
     float yn, k1, k2, k3, k4, k;
     int i;
 
     float h = getStep(x0, xn, n);
-    
-    for (i = 0, i < n; i++) {
-        k1 = h * (f(x0, y0));
-        k2 = h * (f((x0 + h / 2), (y0 + k1 / 2);
-        k3 = h * (f((x0 + h / 2), (y0 + k2 / 2);
-        k4 = h * (f((x0 + h), (y0 + k3);
-        k = (k1 + 2 * k2 + 2 * k3 * k4) / 6;
+
+    for (i = 0; i < n; i++) {
+        k1 = h * function(x0, y0);
+        k2 = h * function((x0 + h / 2), (y0 + k1 / 2));
+        k3 = h * function((x0 + h / 2), (y0 + k2 / 2));
+        k4 = h * function((x0 + h), (y0 + k3));
+        k = (k1 + 2 * k2 + 2 * k3 + k4) / 6;
         yn = y0 + k;
         x0 = x0 + h;
         y0 = yn;
     }
-    return yn, xn;
+    return yn;
 }
 
 int main() {
@@ -218,13 +225,16 @@ int main() {
     double result;
     double t;
     double tLower, tUpper, stepSize;
+    EquationFunction function;
+    EquationFunction integrand;
+    std::string equation;
 
-    std::cout << "\n**********ODE SOLVER********** \n"
-        << "1. Evaluate ODE At A Static Time \n"
-        << "2. Evaluate ODE Over An Interval Of Time \n";
-        << "3. Evaluate Using 4th Order Runge-Kutta Method \n";
-        << "4. Evaluate Integral of A Function \n";
-        << "5. Evaluate System Of Linear Equations \n";
+    std::cout << "\n**********ODE SOLVER********** \n";
+    std::cout << "1. Evaluate ODE At A Static Time \n";
+    std::cout << "2. Evaluate ODE Over An Interval Of Time \n";
+    std::cout << "3. Evaluate Using 4th Order Runge-Kutta Method \n";
+    std::cout << "4. Evaluate Integral of A Function \n";
+    std::cout << "5. Evaluate System Of Linear Equations \n";
     std::cin >> EvalType;
 
     switch (EvalType) {
@@ -249,51 +259,45 @@ int main() {
             std::cout << "y(" << i << "): " << result << std::endl;
         }
         break;
-        case 3:
-            float x0, y0, xn, n;
-            std::string equation;
-            std::cout << "Enter Equation \n";
-            std::getline(std::cin, equation);
-            std::cout << "Enter Initial Conditions \n"
-                << "y0: \n";
-                << "x0: \n";
-            std::cin >> y0;
-            std::cin >> x0;
-            std::cout << "Enter Calculation Point: \n";
-                << "xn: \n";
-            std::cin >> xn;
-            std::cout << "Enter Number Of Steps: \n";
-            std::cin >> n;
-            runge_kutta(equation, x0, y0, xn, n);
-            std::cout << "f(" << x0<< ") = " << y0 "\n";
-            break;
-        case 4:
-            std::string equation;
-            float lowerBound, upperBound, interval;
-
-            std::cout << "What Would You Like To Integrate: \n";
-            std::getline(std::cin, equation);
-            std::cout << "Lower Integration Bound: \n";
-            std::cin >> lowerBound;
-            std::cout << "Upper Integration Bound: \n";
-            std::cin >> upperBound;
-            std::cout << "Enter Number Of Sub Intervals: \n";
-            std::cin >> interval;
-            trapezoidal_integration(equation, lowerBound, upperBound, interval);
-            std::cout << "Integral Of " << equation << "From " << lowerBound << "To " << upperBound << "Is: \n";
-            break;
-        case 5:
-            break;
+    case 3:
+        float x0, y0, xn, n;
+        std::cout << "Enter Initial Conditions \n";
+        std::cout << "y0: \n";
+        std::cout << "x0: \n";
+        std::cin >> y0;
+        std::cin >> x0;
+        std::cout << "Enter Calculation Point: \n";
+        std::cout << "xn: \n";
+        std::cin >> xn;
+        std::cout << "Enter Number Of Steps: \n";
+        std::cin >> n;
+        function = getEquation();
+        runge_kutta(function, x0, y0, xn, n);
+        std::cout << "f(" << x0 << ") = " << y0 << "\n";
+        break;
+    case 4:
+        float lowerBound, upperBound, interval;
+        std::cout << "Lower Integration Bound: \n";
+        std::cin >> lowerBound;
+        std::cout << "Upper Integration Bound: \n";
+        std::cin >> upperBound;
+        std::cout << "Enter Number Of Sub Intervals: \n";
+        std::cin >> interval;
+        trapezoidal_integration(lowerBound, upperBound, interval);
+        std::cout << "Integral Of " << equation << "From " << lowerBound << "To " << upperBound << "Is: \n";
+        break;
+    case 5:
+        break;
     default:
         std::cerr << "Invalid option\n";
         break;
     }
 
     return 0;
-}
+};
 
 //TODO
 //FIX CALCULATIONS OVER AN INTERVAL
 //CREATE A METHOD FOR SOLVING NSV ODE's
 //IMPLEMENT EULER METHOD FOR SOLVING ODE, KEEP SHUNTING YARD ALGORITHM FOR PARSING INPUT INTO EULER METHOD
-//CREATE A SYSTEM OF LINEAR EQUATIONS HANDLER FOR NSV ODE's
+//CREATE A SYSTEM OF LINEAR EQUATIONS HANDLER FOR NSV ODE
